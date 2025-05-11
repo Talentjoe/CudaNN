@@ -18,40 +18,40 @@ namespace readData {
     }
 
     unsigned char reverse(unsigned char A) {
-        return ((((A) & (unsigned char) 0xff00) >> 8) |
-                (((A) & (unsigned char) 0x00ff) << 8));
+        return ((((A) & static_cast<unsigned char>(0xff00)) >> 8) |
+                (((A) & static_cast<unsigned char>(0x00ff)) << 8));
     }
 
-    vector<vector<double> > readData::readImageData(std::string path, int sizeE) {
+    vector<vector<float> > readData::readImageData(std::string path, int sizeE) {
         ifstream inFile(path, ios::in | ios::binary);
         if (!inFile) {
             cout << "error" << endl;
-            return vector<vector<double> >();
+            return {};
         }
 
         unsigned int n, a;
 
-        int size;
-        int height;
-        int width;
+        unsigned int size;
+        unsigned int height;
+        unsigned int width;
 
-        inFile.read((char *) &a, sizeof(unsigned int));
-        inFile.read((char *) &n, sizeof(unsigned int));
+        inFile.read(reinterpret_cast<char *>(&a), sizeof(unsigned int));
+        inFile.read(reinterpret_cast<char *>(&n), sizeof(unsigned int));
         size = reverseint(n);
         size = sizeE == -1 ? size : sizeE > size ? size : sizeE;
-        inFile.read((char *) &a, sizeof(unsigned int));
+        inFile.read(reinterpret_cast<char *>(&a), sizeof(unsigned int));
         height = reverseint(a);
-        inFile.read((char *) &a, sizeof(unsigned int));
+        inFile.read(reinterpret_cast<char *>(&a), sizeof(unsigned int));
         width = reverseint(a);
 
-        vector<vector<double> > imageList(size, vector<double>(height * width));
+        vector<vector<float> > imageList(size, vector<float>(height * width));
 
         for (int k = 0; k < size; k++) {
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
                     unsigned char temp;
-                    inFile.read((char *) &temp, sizeof(unsigned char));
-                    imageList[k][i * width + j] = ((double) temp / 255);
+                    inFile.read(reinterpret_cast<char *>(&temp), sizeof(unsigned char));
+                    imageList[k][i * width + j] = (static_cast<float>(temp) / 255);
                 }
             }
         }
@@ -66,11 +66,11 @@ namespace readData {
             return vector<int>();
         }
 
-        int size;
+        unsigned int size;
         unsigned int n, a;
-        inFileLable.read((char *) &a, sizeof(unsigned int));
+        inFileLable.read(reinterpret_cast<char *>(&a), sizeof(unsigned int));
 
-        inFileLable.read((char *) &n, sizeof(unsigned int));
+        inFileLable.read(reinterpret_cast<char *>(&n), sizeof(unsigned int));
         size = reverseint(n);
         size = sizeE == -1 ? size : sizeE > size ? size : sizeE;
 
@@ -78,7 +78,7 @@ namespace readData {
 
         for (int k = 0; k < size; k++) {
             unsigned char temp;
-            inFileLable.read((char *) &temp, sizeof(unsigned char));
+            inFileLable.read(reinterpret_cast<char *>(&temp), sizeof(unsigned char));
             tagList[k] = temp;
         }
 

@@ -11,22 +11,69 @@
 #include <functional>
 
 namespace NN {
-    class NNcore {
+    class NNCore {
+    public:
+        typedef struct {
+            int width;
+            int height;
+            float *elements;
+        } Matrix;
+
+        typedef struct {
+            int size;
+            float *elements;
+        } Vector;
+    private:
         int size; // size of layers
         float studyRate; // study rate
         bool addDropout; // add dropout or not
         float dropOutRate; // dropout rate
 
+        std::vector<int> layerSize; // size of each layer
+        Vector *d_layersZ; // value of each layer before activation function
+        Vector *d_layers; // value of each layer
+        Vector *d_b; // bias
+        Matrix *d_w; // weight
+
+
         std::vector<std::vector<float> > layers; //value of each layer
         std::vector<std::vector<float> > layersZ; //value of each layer before sigmoid
-        std::vector<int> layerSize; // size of each layer
-
         std::vector<std::vector<float> > b; // bias
         std::vector<std::vector<std::vector<float> > > w; // weight
 
-    public:
 
-        inline static float getRandomfloatNumber(float max = 1, float min = -1) {
+        static __global__ void GetRand(Matrix A, float range = {1..2}) {
+            int row = blockIdx.y * blockDim.y + threadIdx.y;
+            int col = blockIdx.x * blockDim.x + threadIdx.x;
+            A.elements[row * A.width + col] = getRandomFloatNumber();
+        }
+
+        static __global__ void NNCore::MatMulKernel(Matrix A, Matrix B, Matrix C)
+        {
+            // Each thread computes one element of C
+            // by accumulating results into Cvalue
+            float Cvalue = 0;
+            int row = blockIdx.y * blockDim.y + threadIdx.y;
+            int col = blockIdx.x * blockDim.x + threadIdx.x;
+            for (int e = 0; e < A.width; ++e)
+                Cvalue += A.elements[row * A.width + e]
+                        * B.elements[e * B.width + col];
+            C.elements[row * C.width + col] = Cvalue;
+        }
+
+        static __global__ void NNCore::MatrixMulVectorKernel(Vector A, Matrix B, Vector C)
+        {
+            // Each thread computes one element of C
+            // by accumulating results into Cvalue
+            float Cvalue = 0;
+            int col = blockIdx.x * blockDim.x + threadIdx.x;
+            for (int e = 0; e < A.size; ++e)
+                Cvalue += A.elements[e] * B.elements[e * B.width + col];
+            C.elements[col] = Cvalue;
+        }
+
+    public:
+        inline static float getRandomFloatNumber(float max = 1, float min = -1) {
             return min + static_cast<float>(rand()) / (RAND_MAX / (max - min));
         }
 
@@ -38,8 +85,20 @@ namespace NN {
             return sigmoid(x) * (1 - sigmoid(x));
         }
 
-        std::function<float(float)> ActivationFunction;
-        std::function<float(float)> ActivationFunctionP;
+        double ReLU(double x) {
+            return max(x, 0.0);
+        }
+
+        double ReLUP(double x) {
+            return x > 0 ? 1 : 0.01;
+        }
+
+        double heLimit(int fan_in) {
+            return sqrt(6.0 / fan_in);
+        }
+
+        std::vector< std::function<float(float)>> ActivationFunction;
+        std::vector< std::function<float(float)>> ActivationFunctionP;
 
         /**
          * Start training process, modify current NN function
@@ -121,7 +180,7 @@ namespace NN {
          * @param nn the NN to print
          * @param layerNumberToPrint the layer number to print
          */
-        static void printLayers(const NNcore &nn);
+        static void printLayers(const NNCore &nn);
 
         /**
          * Print the weight of the given layer
@@ -134,14 +193,14 @@ namespace NN {
          * @param nn the NN to print
          * @param layerNumberToPrint the layer number to print
          */
-        static void printW(const NNcore &nn, int layerNumberToPrint);
+        static void printW(const NNCore &nn, int layerNumberToPrint);
 
         /**
          * Save the nn framework to the given path
          * @param nn the framework to save
          * @param path the path to save
          */
-        static void save(const NNcore &nn, std::string path);
+        static void save(const NNCore &nn, std::string path);
 
         /**
          * Initialize the NN with the given path, load the framework from the path
@@ -150,8 +209,8 @@ namespace NN {
          * @param drRate the dropout rate
          */
         void init(const std::string &path, float studyRate, float drRate = -1,
-                  std::function<float(float)> activationFunction = sigmoid,
-                  std::function<float(float)> activationFunctionP = sigmoidP);
+                  std::vector< std::function<float(float)>> activationFunction = {sigmoid},
+                  std::vector< std::function<float(float)>> activationFunctionP = {sigmoidP});
 
         /**
          * Initialize the NN with the given layer size, study rate and dropout rate
@@ -160,8 +219,8 @@ namespace NN {
          * @param drRate the dropout rate
          */
         void init(const std::vector<int> &LayerS, float studyR, float drRate = -1,
-                  std::function<float(float)> activationFunction = sigmoid,
-                  std::function<float(float)> activationFunctionP = sigmoidP);
+                  std::vector< std::function<float(float)>> activationFunction = {sigmoid},
+                  std::vector< std::function<float(float)>> activationFunctionP = {sigmoidP});
     };
 }
 

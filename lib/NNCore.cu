@@ -10,10 +10,11 @@
 #include <iomanip>
 
 namespace NN {
+#define uint unsigned int
+#define BLOCK_SIZE 16
     using namespace std;
 
-
-    float NNcore::train(vector<vector<float> > inNums, vector<int> correctOut, bool getAcc) {
+    float NNCore::train(vector<vector<float> > inNums, vector<int> correctOut, bool getAcc) {
         if (inNums.size() != correctOut.size()) {
             cout << "Size Not Match !! " << endl;
             return -1;
@@ -61,7 +62,7 @@ namespace NN {
         return corrctCnt / (float) (corrctCnt + wrongCnt);
     }
 
-    float NNcore::test(vector<vector<float> > inNums, vector<int> correctOut) {
+    float NNCore::test(vector<vector<float> > inNums, vector<int> correctOut) {
         if (inNums.size() != correctOut.size()) {
             cout << "Size Not Match !! " << endl;
             return -1;
@@ -97,7 +98,7 @@ namespace NN {
         return corrctCnt / (corrctCnt + wrongCnt);
     }
 
-    vector<float> NNcore::forward(vector<float> inNums, bool printRes) {
+    vector<float> NNCore::forward(vector<float> inNums, bool printRes) {
         if (inNums.size() != layerSize[0]) {
             cout << "Size Not Mathch !! " << endl;
             return {};
@@ -124,7 +125,7 @@ namespace NN {
         return layers[size - 1];
     }
 
-    float NNcore::CalCost(vector<float> correctOut) {
+    float NNCore::CalCost(vector<float> correctOut) {
         float cost = 0;
         if (correctOut.size() != layerSize[size - 1]) {
             cout << "Size Error" << endl;
@@ -138,7 +139,7 @@ namespace NN {
         return cost;
     }
 
-    float NNcore::backpropagation(vector<float> correctOut) {
+    float NNCore::backpropagation(vector<float> correctOut) {
         vector<vector<float> > delta(size);
         for (int i = 1; i < size; i++) {
             delta[i].resize(layerSize[i]);
@@ -174,7 +175,7 @@ namespace NN {
         return after - pre;
     }
 
-    void NNcore::printLayers() {
+    void NNCore::printLayers() {
         for (int i = 0; i < size; i++) {
             cout << "Layer " << setw(2) << i << ": ";
             for (int j = 0; j < layerSize[i]; j++)
@@ -184,7 +185,7 @@ namespace NN {
         }
     }
 
-    void NNcore::printLayers(const NNcore &nn) {
+    void NNCore::printLayers(const NNCore &nn) {
         for (int i = 0; i < nn.size; i++) {
             cout << "Layer " << setw(2) << i << ": ";
             for (int j = 0; j < nn.layerSize[i]; j++)
@@ -194,7 +195,7 @@ namespace NN {
         }
     }
 
-    void NNcore::printW(int layerNumberToPrint) {
+    void NNCore::printW(int layerNumberToPrint) {
         if (layerNumberToPrint >= size - 1) {
             cout << "Layer Number Error" << endl;
             return;
@@ -216,7 +217,7 @@ namespace NN {
         }
     }
 
-    void NNcore::printW(const NNcore &nn, int layerNumberToPrint) {
+    void NNCore::printW(const NNCore &nn, int layerNumberToPrint) {
         if (layerNumberToPrint >= nn.size - 1) {
             cout << "Layer Number Error" << endl;
             return;
@@ -238,7 +239,7 @@ namespace NN {
         }
     }
 
-    int NNcore::choice() {
+    int NNCore::choice() {
         float max = 0;
         int res = 0;
         for (int i = 0; i < layerSize[size - 1]; i++) {
@@ -252,11 +253,11 @@ namespace NN {
 
 
 
-    void NNcore::changeStudyRate(const float rate) {
+    void NNCore::changeStudyRate(const float rate) {
         studyRate = rate;
     }
 
-    void NNcore::changeDropOutRate(const float rate) {
+    void NNCore::changeDropOutRate(const float rate) {
         if (dropOutRate < 0) {
             addDropout = false;
         } else {
@@ -265,14 +266,14 @@ namespace NN {
         }
     }
 
-    void NNcore::dropSome() {
+    void NNCore::dropSome() {
         if (!addDropout)
             return;
 
 
         for (int i = 1; i < size; i++) {
             for (int j = 0; j < layerSize[i]; j++) {
-                if (getRandomfloatNumber(1,0)< dropOutRate) //So Slow Here Improve Later
+                if (getRandomFloatNumber(1,0)< dropOutRate) //So Slow Here Improve Later
                     b[i][j] = 0;
             }
         }
@@ -280,7 +281,7 @@ namespace NN {
         for (int i = 0; i < size - 1; i++) {
             for (int j = 0; j < layerSize[i]; j++) {
                 for (int k = 0; k < layerSize[i + 1]; k++) {
-                    if (getRandomfloatNumber(1,0)< dropOutRate) //So Slow Here Improve Later
+                    if (getRandomFloatNumber(1,0)< dropOutRate) //So Slow Here Improve Later
                         w[i][j][k] = 0;
                 }
             }
@@ -291,7 +292,7 @@ namespace NN {
 
     }
 
-    void NNcore::save(const NNcore &nn, string path) {
+    void NNCore::save(const NNCore &nn, string path) {
         ofstream outFile(path);
         if (!outFile.is_open()) {
             cout << "error" << endl;
@@ -322,7 +323,7 @@ namespace NN {
         }
     }
 
-    void NNcore::init(const vector<int>& LayerS, const float studyR, const float drRate,
+    void NNCore::init(const vector<int>& LayerS, const float studyR, const float drRate,
         function<float(float)> activateFunction, function<float(float)> activateFunctionP) {
 
         ActivationFunction = activateFunction;
@@ -367,22 +368,22 @@ namespace NN {
             bool lastLayer = i == size - 1;
 
             for (int j = 0; j < layerSize[i]; j++) {
-                layers[i][j] = getRandomfloatNumber();
+                layers[i][j] = getRandomFloatNumber();
                 if (!firstLayer) {
-                    layersZ[i][j] = getRandomfloatNumber();
-                    b[i][j] = getRandomfloatNumber();
+                    layersZ[i][j] = getRandomFloatNumber();
+                    b[i][j] = getRandomFloatNumber();
                 }
                 if (!lastLayer) {
                     for (int k = 0; k < layerSize[i + 1]; k++) {
-                        w[i][j][k] = getRandomfloatNumber();
+                        w[i][j][k] = getRandomFloatNumber();
                     }
                 }
             }
         }
     }
 
-    void NNcore::init(const string &path, float studyR, float drRate,
-        function<float(float)> activateFunction, function<float(float)> activateFunctionP) {
+    void NNCore::init(const string &path, float studyR, float drRate,
+         function<float(float)> activateFunction, function<float(float)> activateFunctionP) {
 
         ActivationFunction = activateFunction;
         ActivationFunctionP = activateFunctionP;
