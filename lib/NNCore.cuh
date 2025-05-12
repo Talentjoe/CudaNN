@@ -1,7 +1,3 @@
-//
-// Created by lenovo on 2025/4/20.
-//
-
 #ifndef NNCORE_CUH
 #define NNCORE_CUH
 
@@ -9,74 +5,37 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include "Matrix.cuh"
+#include "Vector.cuh"
+
 
 namespace NN {
+#define BLOCK_SIZE_MATRIX 32
+#define BLOCK_SIZE_VECTOR 1024
+#define MAX_BLOCK_SIZE 1024
+#define RAND_SEED 1234
+
+    [[deprecated("This function is deprecated, please use the new version")]]
+    inline static float getRandomFloatNumber(float max = 1, float min = -1) {
+        return min + static_cast<float>(rand()) / (RAND_MAX / (max - min));
+    }
+
     class NNCore {
     public:
-        typedef struct {
-            int width;
-            int height;
-            float *elements;
-        } Matrix;
 
-        typedef struct {
-            int size;
-            float *elements;
-        } Vector;
     private:
         int size; // size of layers
         float studyRate; // study rate
-        bool addDropout; // add dropout or not
-        float dropOutRate; // dropout rate
 
         std::vector<int> layerSize; // size of each layer
-        Vector *d_layersZ; // value of each layer before activation function
-        Vector *d_layers; // value of each layer
-        Vector *d_b; // bias
-        Matrix *d_w; // weight
+        //host
+        Vector *h_layersZ; // value of each layer before activation function
+        Vector *h_layers; // value of each layer
+        Vector *h_b; // bias
+        Matrix *h_w; // weight
 
-
-        std::vector<std::vector<float> > layers; //value of each layer
-        std::vector<std::vector<float> > layersZ; //value of each layer before sigmoid
-        std::vector<std::vector<float> > b; // bias
-        std::vector<std::vector<std::vector<float> > > w; // weight
-
-
-        static __global__ void GetRand(Matrix A, float range = {1..2}) {
-            int row = blockIdx.y * blockDim.y + threadIdx.y;
-            int col = blockIdx.x * blockDim.x + threadIdx.x;
-            A.elements[row * A.width + col] = getRandomFloatNumber();
-        }
-
-        static __global__ void NNCore::MatMulKernel(Matrix A, Matrix B, Matrix C)
-        {
-            // Each thread computes one element of C
-            // by accumulating results into Cvalue
-            float Cvalue = 0;
-            int row = blockIdx.y * blockDim.y + threadIdx.y;
-            int col = blockIdx.x * blockDim.x + threadIdx.x;
-            for (int e = 0; e < A.width; ++e)
-                Cvalue += A.elements[row * A.width + e]
-                        * B.elements[e * B.width + col];
-            C.elements[row * C.width + col] = Cvalue;
-        }
-
-        static __global__ void NNCore::MatrixMulVectorKernel(Vector A, Matrix B, Vector C)
-        {
-            // Each thread computes one element of C
-            // by accumulating results into Cvalue
-            float Cvalue = 0;
-            int col = blockIdx.x * blockDim.x + threadIdx.x;
-            for (int e = 0; e < A.size; ++e)
-                Cvalue += A.elements[e] * B.elements[e * B.width + col];
-            C.elements[col] = Cvalue;
-        }
 
     public:
-        inline static float getRandomFloatNumber(float max = 1, float min = -1) {
-            return min + static_cast<float>(rand()) / (RAND_MAX / (max - min));
-        }
-
         inline static float sigmoid(float x) {
             return 1 / (1 + exp(-x));
         }
@@ -97,8 +56,27 @@ namespace NN {
             return sqrt(6.0 / fan_in);
         }
 
-        std::vector< std::function<float(float)>> ActivationFunction;
-        std::vector< std::function<float(float)>> ActivationFunctionP;
+        std::vector<std::function<float(float)> > ActivationFunction;
+        std::vector<std::function<float(float)> > ActivationFunctionP;
+
+
+        /**
+         * Initialize the NN with the given path, load the framework from the path
+         * @param path the target framework path
+         * @param studyRate the study rate
+         */
+        NNCore(const std::string &path, float studyRate,
+               std::vector<std::function<float(float)> > activationFunction = {sigmoid},
+               std::vector<std::function<float(float)> > activationFunctionP = {sigmoidP});
+
+        /**
+         * Initialize the NN with the given layer size, study rate and dropout rate
+         * @param LayerS the size of each layer, each number indicates the size of the layer
+         * @param studyR the study rate
+         */
+        NNCore(const std::vector<int> &LayerS, float studyR,
+               std::vector<std::function<float(float)> > activationFunction = {sigmoid},
+               std::vector<std::function<float(float)> > activationFunctionP = {sigmoidP});
 
         /**
          * Start training process, modify current NN function
@@ -201,26 +179,6 @@ namespace NN {
          * @param path the path to save
          */
         static void save(const NNCore &nn, std::string path);
-
-        /**
-         * Initialize the NN with the given path, load the framework from the path
-         * @param path the target framework path
-         * @param studyRate the study rate
-         * @param drRate the dropout rate
-         */
-        void init(const std::string &path, float studyRate, float drRate = -1,
-                  std::vector< std::function<float(float)>> activationFunction = {sigmoid},
-                  std::vector< std::function<float(float)>> activationFunctionP = {sigmoidP});
-
-        /**
-         * Initialize the NN with the given layer size, study rate and dropout rate
-         * @param LayerS the size of each layer, each number indicates the size of the layer
-         * @param studyR the study rate
-         * @param drRate the dropout rate
-         */
-        void init(const std::vector<int> &LayerS, float studyR, float drRate = -1,
-                  std::vector< std::function<float(float)>> activationFunction = {sigmoid},
-                  std::vector< std::function<float(float)>> activationFunctionP = {sigmoidP});
     };
 }
 

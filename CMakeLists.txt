@@ -5,7 +5,13 @@ set(CMAKE_CUDA_STANDARD 20)
 
 add_executable(cudaNN main.cu ./lib/readData.h ./lib/readData.cpp
         lib/NNCore.cu
-        lib/NNCore.cuh)
+        lib/NNCore.cuh
+        lib/Vector.cu
+        lib/Matrix.cu
+        lib/CudaFunctions.cu
+        lib/Vector.cuh
+        lib/Matrix.cuh
+        lib/CudaFunctions.cuh)
 
 set_target_properties(cudaNN PROPERTIES
                       CUDA_SEPARABLE_COMPILATION ON)
