@@ -19,8 +19,16 @@ namespace NN {
         cudaMemcpy(elements, d_elements, sizeof(float) * width * height, cudaMemcpyDeviceToHost);
     }
 
+    void Matrix::cpDtoHAsync() const {
+        cudaMemcpyAsync(elements, d_elements, sizeof(float) * width * height, cudaMemcpyDeviceToHost);
+    }
+
     void Matrix::cpHoD() const {
         cudaMemcpy(d_elements, elements, sizeof(float) * width * height, cudaMemcpyHostToDevice);
+    }
+
+    void Matrix::cpHoDAsync() const {
+        cudaMemcpyAsync(d_elements, elements, sizeof(float) * width * height, cudaMemcpyHostToDevice);
     }
 
     void Matrix::free() const {

@@ -1,31 +1,32 @@
-#include <cstdint>
-#include <ctime>
-#include <iostream>
-
 #include "./lib/NNCore.cuh"
 #include "./lib/readData.h"
 
 using namespace std;
 
+void genMatWithRand() {
+    NN::Matrix A;
+
+    A.resize(10, 10);
+
+    A.initRand();
+    A.cpDtoH();
+
+    A.printMat();
+}
+
+void genVecWithRand() {
+    NN::Vector A;
+
+    A.resize(100);
+
+    A.initRandom();
+    A.cpDtoH();
+
+    A.printVec();
+}
+
 
 int main() {
-    NN::Vector inNums;
-
-    inNums.resize(100);
-
-    inNums.initRandom();
-    inNums.cpDtoH();
-
-    inNums.printVec();
-
-    NN::Matrix inMat;
-    
-    inMat.resize(10, 10);
-
-    inMat.initRand();
-    inMat.cpDtoH();
-
-    inMat.printMat();
 
     return 0;
 }

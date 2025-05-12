@@ -18,8 +18,16 @@ namespace NN {
         cudaMemcpy(elements, d_elements, sizeof(float) * size, cudaMemcpyDeviceToHost);
     }
 
+    void Vector::cpDtoHAsync() const {
+        cudaMemcpyAsync(elements, d_elements, sizeof(float) * size, cudaMemcpyDeviceToHost);
+    }
+
     void Vector::cpHoD() const {
         cudaMemcpy(d_elements, elements, sizeof(float) * size, cudaMemcpyHostToDevice);
+    }
+
+    void Vector::cpHoDAsync() const {
+        cudaMemcpyAsync(d_elements, elements, sizeof(float) * size, cudaMemcpyHostToDevice);
     }
 
     void Vector::free() const {

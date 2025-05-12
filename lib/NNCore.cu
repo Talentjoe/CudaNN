@@ -5,14 +5,96 @@
 #include "NNCore.cuh"
 
 #include <iostream>
-#include <cmath>
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 
 namespace NN {
 #define uint unsigned int
 
     using namespace std;
+
+
+    NNCore::NNCore(const vector<LayerStructure> &Layers, const float studyR) {
+        size = Layers.size();
+
+        ranges::transform(Layers, back_inserter(ActivationFunction),
+                          [](const LayerStructure &layer) { return layer.activationFunction; });
+
+        ranges::transform(Layers, back_inserter(layerSize),
+                          [](const LayerStructure &layer) { return layer.layerSize; });
+
+        studyRate = studyR;
+
+        layers = new Vector[size];
+        layersZ = new Vector[size];
+        b = new Vector[size];
+        w = new Matrix[size - 1];
+
+        for (int i = 0; i < size; ++i) {
+            layers[i].resize(layerSize[i]);
+            layers[i].initRandom();
+            layersZ[i].resize(layerSize[i]);
+            layersZ[i].initRandom();
+            b[i].resize(layerSize[i]);
+            b[i].initRandom();
+            if (i<size-1) {
+                w[i].resize(layerSize[i], layerSize[i + 1]);
+                w[i].initRand();
+            }
+        }
+
+        cout << "RESIZED And Inited" << endl;
+    }
+
+    NNCore::~NNCore() {
+        for (int i = 0; i < size; ++i) {
+            layers[i].free();
+            layersZ[i].free();
+            b[i].free();
+            if (i < size - 1) {
+                w[i].free();
+            }
+        }
+
+        delete[] layers;
+        delete[] layersZ;
+        delete[] b;
+        delete[] w;
+    }
+
+    vector<float> NNCore::forward(vector<float> inNums, bool printRes) {
+        if (inNums.size() != layerSize[0]) {
+            cout << "Size Not Mathch !! " << endl;
+            return {};
+        }
+
+        layers[0].elements = inNums.data();
+        layers[0].cpHoD();
+
+        cudaStream_t stream;
+        cudaStreamCreate(&stream);
+
+        for (int i = 0; i < size - 1; ++i) {
+
+
+            if (ActivationFunction[i] == "sigmoid") {
+
+            } else if (ActivationFunction[i] == "ReLU") {
+
+            }
+
+
+            layers[i + 1].cpDtoHAsync();
+            layersZ[i + 1].cpDtoHAsync();
+            w[i + 1].cpDtoHAsync();
+            b[i + 1].cpDtoHAsync();
+        }
+
+        cudaStreamSynchronize(stream);
+        cudaStreamDestroy(stream);
+        return {};
+    }
 
     float NNCore::train(vector<vector<float> > inNums, vector<int> correctOut, bool getAcc) {
         if (inNums.size() != correctOut.size()) {
@@ -96,9 +178,6 @@ namespace NN {
         return corrctCnt / (corrctCnt + wrongCnt);
     }
 
-    vector<float> NNCore::forward(vector<float> inNums, bool printRes) {
-        return{};
-    }
 
     float NNCore::CalCost(vector<float> correctOut) {
         return 0;
@@ -134,35 +213,5 @@ namespace NN {
     }
 
     void NNCore::save(const NNCore &nn, string path) {
-    }
-
-    NNCore::NNCore(const vector<int> &LayerS, const float studyR,
-                      std::vector<std::function<float(float)> > activationFunction,
-                      std::vector<std::function<float(float)> > activationFunctionP) {
-        ActivationFunction = activationFunction;
-        ActivationFunctionP = activationFunctionP;
-
-        size = LayerS.size();
-        layerSize = LayerS;
-        studyRate = studyR;
-
-        h_layers = new Vector[size];
-        h_layersZ = new Vector[size];
-        h_b = new Vector[size];
-
-        for (int i = 0; i < size; ++i) {
-            h_layers[i].resize(layerSize[i]);
-            h_layersZ[i].resize(layerSize[i]);
-            h_b[i].resize(layerSize[i]);
-        }
-
-        h_w = new Matrix[size - 1];
-        for (int i = 0; i < size - 1; ++i) {
-            h_w[i].resize(layerSize[i], layerSize[i + 1]);
-        }
-
-        cout << "RESIZED" << endl;
-
-
     }
 } // NN

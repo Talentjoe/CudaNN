@@ -17,8 +17,10 @@ namespace NN {
         void resize(int w, int h);
 
         void cpDtoH() const;
+        void cpDtoHAsync() const;
 
         void cpHoD() const;
+        void cpHoDAsync() const;
 
         void free() const;
 

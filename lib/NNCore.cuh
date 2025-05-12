@@ -4,7 +4,7 @@
 
 #include <vector>
 #include <string>
-#include <functional>
+#include <math_functions.h>
 #include "Matrix.cuh"
 #include "Vector.cuh"
 
@@ -21,43 +21,53 @@ namespace NN {
     }
 
     class NNCore {
-    public:
-
-    private:
         int size; // size of layers
         float studyRate; // study rate
 
         std::vector<int> layerSize; // size of each layer
-        //host
-        Vector *h_layersZ; // value of each layer before activation function
-        Vector *h_layers; // value of each layer
-        Vector *h_b; // bias
-        Matrix *h_w; // weight
+
+        Vector *layersZ; // value of each layer before activation function
+        Vector *layers; // value of each layer
+        Vector *b; // bias
+        Matrix *w; // weight
 
 
     public:
-        inline static float sigmoid(float x) {
-            return 1 / (1 + exp(-x));
-        }
+        struct LayerStructure {
+            int layerSize;
+            std::string activationFunction;
+        };
 
-        inline static float sigmoidP(float x) {
-            return sigmoid(x) * (1 - sigmoid(x));
-        }
+        struct sigmoid {
+            __device__ float operator()(float x) const {
+                return 1 / (1 + expf(-x));
+            }
+        };
 
-        double ReLU(double x) {
-            return max(x, 0.0);
-        }
+        struct sigmoidP {
+            __device__ float operator()(float x) const {
+                float t = 1 / (1 + expf(-x));
+                return t * (1 - t);
+            }
+        };
 
-        double ReLUP(double x) {
-            return x > 0 ? 1 : 0.01;
-        }
+        struct ReLU {
+            __device__ float operator()(float x) const {
+                return max(x, 0.0f);
+            }
+        };
+
+        struct ReLUP {
+            __device__ float operator()(float x) const {
+                return x > 0 ? 1 : 0.01;
+            }
+        };
 
         double heLimit(int fan_in) {
             return sqrt(6.0 / fan_in);
         }
 
-        std::vector<std::function<float(float)> > ActivationFunction;
-        std::vector<std::function<float(float)> > ActivationFunctionP;
+        std::vector<std::string> ActivationFunction;
 
 
         /**
@@ -65,18 +75,16 @@ namespace NN {
          * @param path the target framework path
          * @param studyRate the study rate
          */
-        NNCore(const std::string &path, float studyRate,
-               std::vector<std::function<float(float)> > activationFunction = {sigmoid},
-               std::vector<std::function<float(float)> > activationFunctionP = {sigmoidP});
+        NNCore(const std::string &path, float studyRate);
 
         /**
          * Initialize the NN with the given layer size, study rate and dropout rate
          * @param LayerS the size of each layer, each number indicates the size of the layer
          * @param studyR the study rate
          */
-        NNCore(const std::vector<int> &LayerS, float studyR,
-               std::vector<std::function<float(float)> > activationFunction = {sigmoid},
-               std::vector<std::function<float(float)> > activationFunctionP = {sigmoidP});
+        NNCore(const std::vector<LayerStructure> &LayerS, float studyR);
+
+        ~NNCore();
 
         /**
          * Start training process, modify current NN function
