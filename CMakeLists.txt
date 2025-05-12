@@ -15,4 +15,6 @@ add_executable(cudaNN main.cu ./lib/readData.h ./lib/readData.cpp
 
 set_target_properties(cudaNN PROPERTIES
                       CUDA_SEPARABLE_COMPILATION ON)
+
 file(COPY ${CMAKE_SOURCE_DIR}/Data DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/test.mod DESTINATION ${CMAKE_BINARY_DIR})

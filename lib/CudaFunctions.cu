@@ -1,6 +1,13 @@
 #include "CudaFunctions.cuh"
 
 namespace NN {
+    // __global__ void reset_layer(Vector layer, float* value) {
+    //     int id = blockIdx.x * blockDim.x + threadIdx.x;
+    //     if (id < layer.size) {
+    //         layer.d_elements[id] = value[id];
+    //     }
+    // }
+
     __global__ void setup_kernel(curandState *state, unsigned long seed, int total_size) {
         int id = blockIdx.x * blockDim.x + threadIdx.x;
         if (id < total_size) {
@@ -16,7 +23,7 @@ namespace NN {
         }
     }
 
-    __global__ void MatMulKernel(Matrix A, Matrix B, Matrix C) {
+    __global__ void mat_mul_kernel(Matrix A, Matrix B, Matrix C) {
         // Each thread computes one element of C
         // by accumulating results into Cvalue
         float Cvalue = 0;
@@ -28,7 +35,7 @@ namespace NN {
         C.d_elements[row * C.width + col] = Cvalue;
     }
 
-    __global__ void MatrixMulVectorKernel(Vector A, Matrix B, Vector C) {
+    __global__ void matrix_mul_vector_kernel(Vector A, Matrix B, Vector C) {
         // Each thread computes one element of C
         // by accumulating results into Cvalue
         float Cvalue = 0;
@@ -36,6 +43,16 @@ namespace NN {
         for (int e = 0; e < A.size; ++e)
             Cvalue += A.d_elements[e] * B.d_elements[e * B.width + col];
         C.d_elements[col] = Cvalue;
+    }
+
+    __global__ void push_forward_kernel(Vector layer, Vector layerZ, Vector b, Matrix w) {
+        int id = blockIdx.x * blockDim.x + threadIdx.x;
+        if (id < layerZ.size) {
+            layerZ.d_elements[id] = b.d_elements[id];
+            for (int i = 0; i < layer.size; ++i) {
+                layerZ.d_elements[id] += w.d_elements[id * w.width + i] * layer.d_elements[i];
+            }
+        }
     }
 
 

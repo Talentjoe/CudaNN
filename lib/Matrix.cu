@@ -37,8 +37,8 @@ namespace NN {
     }
 
     void Matrix::printMat() const {
-        for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
+        for (int i = 0; i < height; i++) {
                 std::cout << elements[i * width + j] << " ";
             }
             std::cout << std::endl;

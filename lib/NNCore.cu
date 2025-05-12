@@ -9,11 +9,65 @@
 #include <iomanip>
 #include <algorithm>
 
+#include "CudaFunctions.cuh"
+
 namespace NN {
 #define uint unsigned int
+#define SIGMOID_NAME "sigmoid"
+#define RULE_NAME "ReLU"
 
     using namespace std;
 
+
+    NNCore::NNCore(const std::string &path, float studyRate) {
+        ifstream inFile(path);
+        ActivationFunction.clear();
+
+        if (!inFile.is_open()) {
+            cout << "error" << endl;
+            return;
+        }
+
+        this->studyRate = studyRate;
+
+        inFile >> size;
+        layerSize = vector<int>(size);
+        for (int i = 0; i < size; i++) {
+            inFile >> layerSize[i];
+        }
+
+        layers = new Vector[size];
+        layersZ = new Vector[size];
+        b = new Vector[size];
+        w = new Matrix[size - 1];
+
+        for (int i = 0; i < size; ++i) {
+            layers[i].resize(layerSize[i]);
+            layersZ[i].resize(layerSize[i]);
+            b[i].resize(layerSize[i]);
+            if (i < size - 1) {
+                w[i].resize(layerSize[i], layerSize[i + 1]);
+            }
+        }
+
+        for (int i = 1; i < size; i++) {
+            ActivationFunction.push_back(SIGMOID_NAME);
+            for (int j = 0; j < layerSize[i]; j++) {
+                inFile >> b[i].elements[j];
+            }
+            b[i].cpHoDAsync();
+        }
+
+        for (int i = 0; i < size - 1; i++) {
+            for (int k = 0; k < w[i].width; k++) {
+                for (int j = 0; j < w[i].height; j++) {
+                    inFile >> w[i].elements[j * w[i].width + k];
+                }
+            }
+            w[i].cpHoDAsync();
+        }
+        cudaDeviceSynchronize();
+    }
 
     NNCore::NNCore(const vector<LayerStructure> &Layers, const float studyR) {
         size = Layers.size();
@@ -38,7 +92,7 @@ namespace NN {
             layersZ[i].initRandom();
             b[i].resize(layerSize[i]);
             b[i].initRandom();
-            if (i<size-1) {
+            if (i < size - 1) {
                 w[i].resize(layerSize[i], layerSize[i + 1]);
                 w[i].initRand();
             }
@@ -65,7 +119,7 @@ namespace NN {
 
     vector<float> NNCore::forward(vector<float> inNums, bool printRes) {
         if (inNums.size() != layerSize[0]) {
-            cout << "Size Not Mathch !! " << endl;
+            cout << "Size Does Not Match !! " << endl;
             return {};
         }
 
@@ -76,24 +130,29 @@ namespace NN {
         cudaStreamCreate(&stream);
 
         for (int i = 0; i < size - 1; ++i) {
+            int blockSize = layerSize[i + 1];
+            int gridSize = 1;
+            if (layerSize[i + 1] > MAX_BLOCK_SIZE) {
+                blockSize = MAX_BLOCK_SIZE;
+                gridSize = (layerSize[i] + blockSize - 1) / blockSize;
+            }
+            push_forward_kernel<<<gridSize,blockSize,0,stream>>>(layers[i], layersZ[i + 1], b[i + 1], w[i]);
 
-
-            if (ActivationFunction[i] == "sigmoid") {
-
-            } else if (ActivationFunction[i] == "ReLU") {
-
+            if (ActivationFunction[i] == SIGMOID_NAME) {
+                activate_kernel<<<gridSize,blockSize,0,stream>>>(layersZ[i + 1], layers[i + 1], sigmoid());
+            } else if (ActivationFunction[i] == RULE_NAME) {
+                activate_kernel<<<gridSize,blockSize,0,stream>>>(layersZ[i + 1], layers[i + 1], ReLU());
             }
 
-
-            layers[i + 1].cpDtoHAsync();
-            layersZ[i + 1].cpDtoHAsync();
-            w[i + 1].cpDtoHAsync();
-            b[i + 1].cpDtoHAsync();
+            layers[i + 1].cpDtoH();
+            layersZ[i + 1].cpDtoH();
+            //w[i + 1].cpDtoHAsync();
+            //b[i + 1].cpDtoHAsync();
         }
 
         cudaStreamSynchronize(stream);
         cudaStreamDestroy(stream);
-        return {};
+        return vector(layers[size - 1].elements, layers[size - 1].elements + layerSize[size - 1]);
     }
 
     float NNCore::train(vector<vector<float> > inNums, vector<int> correctOut, bool getAcc) {
@@ -200,7 +259,15 @@ namespace NN {
     }
 
     int NNCore::choice() {
-        return 0;
+        double max = 0;
+        int res = 0;
+        for (int i = 0; i < layerSize[size - 1]; i++) {
+            if (layers[size - 1].elements[i] > max) {
+                max = layers[size - 1].elements[i];
+                res = i;
+            }
+        }
+        return res;
     }
 
     void NNCore::changeStudyRate(const float rate) {

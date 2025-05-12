@@ -26,6 +26,7 @@ namespace NN {
 
         std::vector<int> layerSize; // size of each layer
 
+    public:
         Vector *layersZ; // value of each layer before activation function
         Vector *layers; // value of each layer
         Vector *b; // bias

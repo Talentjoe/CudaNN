@@ -9,7 +9,7 @@
 namespace NN {
     struct Vector {
         int size;
-        float *elements;
+        float *elements = nullptr;
         float *d_elements;
 
         void initRandom();

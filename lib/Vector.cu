@@ -9,6 +9,9 @@ namespace NN {
     }
 
     void Vector::resize(int s) {
+        if (elements != nullptr) {
+            delete[] elements;
+        }
         size = s;
         elements = new float[s];
         cudaMalloc(&d_elements, sizeof(float) * s);

@@ -27,6 +27,17 @@ void genVecWithRand() {
 
 
 int main() {
+    NN::NNCore *nn = new NN::NNCore("./test.mod", 0.01);
+
+    //nn->w[1].cpDtoHAsync();
+    //nn->w[1].printMat();
+
+    vector<vector<float> > testInData;
+    vector<int> testOutData;
+    testInData = readData::readData::readImageData("../Data/t10k-images.idx3-ubyte");
+    testOutData = readData::readData::readTagData("../Data/t10k-labels.idx1-ubyte");
+
+    nn->test(testInData, testOutData);
 
     return 0;
 }

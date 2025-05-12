@@ -11,6 +11,7 @@ namespace NN {
         int height;
         float *elements; // HostPointer
         float *d_elements; // DevicePointer
+        //[i][j] -> i * w.width + j     width previous layer
 
         void initRand() const;
 
