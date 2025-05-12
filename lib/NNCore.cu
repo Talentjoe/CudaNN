@@ -51,7 +51,8 @@ namespace NN {
         }
 
         for (int i = 1; i < size; i++) {
-            ActivationFunction.push_back(SIGMOID_NAME);
+            //need to be changed based on the activation function
+            ActivationFunction.emplace_back(SIGMOID_NAME);
             for (int j = 0; j < layerSize[i]; j++) {
                 inFile >> b[i].elements[j];
             }
@@ -110,11 +111,6 @@ namespace NN {
                 w[i].free();
             }
         }
-
-        delete[] layers;
-        delete[] layersZ;
-        delete[] b;
-        delete[] w;
     }
 
     vector<float> NNCore::forward(vector<float> inNums, bool printRes) {
@@ -144,8 +140,8 @@ namespace NN {
                 activate_kernel<<<gridSize,blockSize,0,stream>>>(layersZ[i + 1], layers[i + 1], ReLU());
             }
 
-            layers[i + 1].cpDtoH();
-            layersZ[i + 1].cpDtoH();
+            layers[i + 1].cpDtoHAsync();
+            layersZ[i + 1].cpDtoHAsync();
             //w[i + 1].cpDtoHAsync();
             //b[i + 1].cpDtoHAsync();
         }

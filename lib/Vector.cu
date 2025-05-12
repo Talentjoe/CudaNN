@@ -34,7 +34,6 @@ namespace NN {
     }
 
     void Vector::free() const {
-        delete[] elements;
         cudaFree(d_elements);
     }
 

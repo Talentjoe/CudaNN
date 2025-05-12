@@ -21,7 +21,7 @@ namespace NN {
     }
 
     class NNCore {
-        int size; // size of layers
+        unsigned long long size; // size of layers
         float studyRate; // study rate
 
         std::vector<int> layerSize; // size of each layer
