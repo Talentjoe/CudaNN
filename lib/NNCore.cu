@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
+#include <assert.h>
 
 #include "CudaFunctions.cuh"
 
@@ -40,11 +41,14 @@ namespace NN {
         layersZ = new Vector[size];
         b = new Vector[size];
         w = new Matrix[size - 1];
+        delta = new Vector[size];
 
         for (int i = 0; i < size; ++i) {
+            ActivationFunction.emplace_back(SIGMOID_NAME);
             layers[i].resize(layerSize[i]);
             layersZ[i].resize(layerSize[i]);
             b[i].resize(layerSize[i]);
+            delta[i].resize(layerSize[i]);
             if (i < size - 1) {
                 w[i].resize(layerSize[i], layerSize[i + 1]);
             }
@@ -52,7 +56,6 @@ namespace NN {
 
         for (int i = 1; i < size; i++) {
             //need to be changed based on the activation function
-            ActivationFunction.emplace_back(SIGMOID_NAME);
             for (int j = 0; j < layerSize[i]; j++) {
                 inFile >> b[i].elements[j];
             }
@@ -85,6 +88,7 @@ namespace NN {
         layersZ = new Vector[size];
         b = new Vector[size];
         w = new Matrix[size - 1];
+        delta = new Vector[size];
 
         for (int i = 0; i < size; ++i) {
             layers[i].resize(layerSize[i]);
@@ -93,9 +97,12 @@ namespace NN {
             layersZ[i].initRandom();
             b[i].resize(layerSize[i]);
             b[i].initRandom();
+            delta[i].resize(layerSize[i]);
+            delta[i].initRandom();
             if (i < size - 1) {
+                float lim = heLimit(layerSize[i]);
                 w[i].resize(layerSize[i], layerSize[i + 1]);
-                w[i].initRand();
+                w[i].initRand(lim,-lim);
             }
         }
 
@@ -130,7 +137,7 @@ namespace NN {
             int gridSize = 1;
             if (layerSize[i + 1] > MAX_BLOCK_SIZE) {
                 blockSize = MAX_BLOCK_SIZE;
-                gridSize = (layerSize[i] + blockSize - 1) / blockSize;
+                gridSize = (layerSize[i + 1] + blockSize - 1) / blockSize;
             }
             push_forward_kernel<<<gridSize,blockSize,0,stream>>>(layers[i], layersZ[i + 1], b[i + 1], w[i]);
 
@@ -151,7 +158,63 @@ namespace NN {
         return vector(layers[size - 1].elements, layers[size - 1].elements + layerSize[size - 1]);
     }
 
-    float NNCore::train(vector<vector<float> > inNums, vector<int> correctOut, bool getAcc) {
+    float NNCore::backpropagation(const vector<float> &correctOut) {
+        cudaStream_t stream;
+        cudaStreamCreate(&stream);
+
+        float *correctOutD;
+        cudaMalloc(&correctOutD, sizeof(float) * correctOut.size());
+        cudaMemcpy(correctOutD, correctOut.data(), sizeof(float) * correctOut.size(), cudaMemcpyHostToDevice);
+
+        int blockSize = layerSize[size - 1];
+        int gridSize = 1;
+        if (layerSize[size - 1] > MAX_BLOCK_SIZE) {
+            blockSize = MAX_BLOCK_SIZE;
+            gridSize = (layerSize[size - 1] + blockSize - 1) / blockSize;
+        }
+
+        if (ActivationFunction[size - 1] == SIGMOID_NAME) {
+            get_last_layer_delta_kernel<<<gridSize,blockSize,0,stream>>>(layers[size - 1], layersZ[size - 1], correctOutD,delta[size-1],sigmoidP());
+        } else if (ActivationFunction[size - 1] == RULE_NAME) {
+            get_last_layer_delta_kernel<<<gridSize,blockSize,0,stream>>>(layers[size - 1], layersZ[size - 1], correctOutD,delta[size-1],ReLUP());
+        }
+
+        for (int i = size - 2; i > 0; i--) {
+            blockSize = layerSize[i];
+            gridSize = 1;
+            if (layerSize[i] > MAX_BLOCK_SIZE) {
+                blockSize = MAX_BLOCK_SIZE;
+                gridSize = (layerSize[i] + blockSize - 1) / blockSize;
+            }
+            if (ActivationFunction[i] == SIGMOID_NAME) {
+                back_propagate_delta_kernel<<<gridSize,blockSize,0,stream>>>(
+                    delta[i], delta[i + 1],w[i], layersZ[i], sigmoidP());
+            } else if (ActivationFunction[i] == RULE_NAME) {
+                back_propagate_delta_kernel<<<gridSize,blockSize,0,stream>>>(
+                    delta[i], delta[i + 1],w[i], layersZ[i], ReLUP());
+            }
+        }
+
+        for (int i = 0; i < size -1;i++) {
+            assert(layerSize[i] == w[i].width);
+            assert(layerSize[i + 1] == w[i].height);
+            blockSize = layerSize[i+1];
+            gridSize = 1;
+            if (layerSize[i+1] > MAX_BLOCK_SIZE) {
+                blockSize = MAX_BLOCK_SIZE;
+                gridSize = (layerSize[i+1] + blockSize - 1) / blockSize;
+            }
+            update_weights_kernel<<<blockSize,gridSize>>>(w[i], b[i+1], delta[i+1], layers[i], studyRate);
+        }
+
+        cudaStreamSynchronize(stream);
+        cudaStreamDestroy(stream);
+        cudaFree(correctOutD);
+
+        return 0;
+    }
+
+    float NNCore::train(const vector<vector<float> > &inNums, const vector<int> &correctOut, bool getAcc) {
         if (inNums.size() != correctOut.size()) {
             cout << "Size Not Match !! " << endl;
             return -1;
@@ -197,7 +260,7 @@ namespace NN {
         return corrctCnt / (float) (corrctCnt + wrongCnt);
     }
 
-    float NNCore::test(vector<vector<float> > inNums, vector<int> correctOut) {
+    float NNCore::test(const vector<vector<float> > &inNums, const vector<int> &correctOut) {
         if (inNums.size() != correctOut.size()) {
             cout << "Size Not Match !! " << endl;
             return -1;
@@ -235,10 +298,6 @@ namespace NN {
 
 
     float NNCore::CalCost(vector<float> correctOut) {
-        return 0;
-    }
-
-    float NNCore::backpropagation(vector<float> correctOut) {
         return 0;
     }
 

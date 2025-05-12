@@ -4,8 +4,8 @@
 #include "CudaFunctions.cuh"
 
 namespace NN {
-    void Matrix::initRand() const {
-        GetRand(*this);
+    void Matrix::initRand(float max, float min) const {
+        GetRand(*this,max,min);
     }
 
     void Matrix::resize(int w, int h) {

@@ -13,14 +13,16 @@ namespace NN {
         float *d_elements; // DevicePointer
         //[i][j] -> i * w.width + j     width previous layer
 
-        void initRand() const;
+        void initRand(float max = 1, float min = -1) const;
 
         void resize(int w, int h);
 
         void cpDtoH() const;
+
         void cpDtoHAsync() const;
 
         void cpHoD() const;
+
         void cpHoDAsync() const;
 
         void free() const;

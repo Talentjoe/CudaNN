@@ -12,7 +12,7 @@ namespace NN {
         float *elements = nullptr;
         float *d_elements;
 
-        void initRandom();
+        void initRandom(float max = 1, float min = -1);
 
         void resize(int s);
 

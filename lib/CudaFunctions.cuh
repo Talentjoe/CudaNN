@@ -22,6 +22,28 @@ namespace NN{
 
     __global__ void push_forward_kernel(Vector layer, Vector layerZ, Vector b, Matrix w);
 
+    __global__ void update_weights_kernel(Matrix w, Vector b,Vector delta, Vector layer, float studyRate);
+
+    template<typename ActFunP>
+    __global__ void back_propagate_delta_kernel(Vector deltaPreLayer, Vector delta, Matrix w, Vector layerZ, ActFunP af_p) {
+        int id = blockIdx.x * blockDim.x + threadIdx.x;
+        if (id < deltaPreLayer.size) {
+            float val = 0;
+            for (int i = 0; i < delta.size; ++i) {
+                val += delta.d_elements[i] * w.d_elements[ i * w.width + id];
+            }
+            deltaPreLayer.d_elements[id] = af_p(layerZ.d_elements[id]) * val;
+        }
+    }
+
+    template<typename ActFunP>
+    __global__ void get_last_layer_delta_kernel(Vector layer, Vector layerZ,float* correctAns, Vector delta, ActFunP af_p) {
+        int id = blockIdx.x * blockDim.x + threadIdx.x;
+        if (id < layer.size) {
+            delta.d_elements[id] = af_p(layerZ.d_elements[id]) * (layer.d_elements[id] - correctAns[id]);
+        }
+    }
+
     template<typename ActFun>
     __global__ void activate_kernel(Vector layerZ, Vector layer, ActFun af) {
         int id = blockIdx.x * blockDim.x + threadIdx.x;

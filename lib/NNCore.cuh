@@ -25,12 +25,12 @@ namespace NN {
         float studyRate; // study rate
 
         std::vector<int> layerSize; // size of each layer
-
     public:
         Vector *layersZ; // value of each layer before activation function
         Vector *layers; // value of each layer
         Vector *b; // bias
         Matrix *w; // weight
+        Vector *delta; // delta of each layer
 
 
     public:
@@ -64,7 +64,7 @@ namespace NN {
             }
         };
 
-        double heLimit(int fan_in) {
+        float heLimit(int fan_in) {
             return sqrt(6.0 / fan_in);
         }
 
@@ -97,7 +97,7 @@ namespace NN {
          * @param getAcc a bool which indicate whether to get the accuracy of the training
          * @return if getAcc is true, return the accuracy of the training, otherwise return -1
          */
-        float train(std::vector<std::vector<float> > inNums, std::vector<int> correctOut, bool getAcc = false);
+        float train(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut, bool getAcc = false);
 
         /**
          * Test the NN with the given data
@@ -108,7 +108,7 @@ namespace NN {
          * data, and the value should be less than the size of the last layer
          * @return the accuracy of the test
          */
-        float test(std::vector<std::vector<float> > inNums, std::vector<int> correctOut);
+        float test(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut);
 
         /**
          * Forward propagation
@@ -124,7 +124,7 @@ namespace NN {
          * @param correctOut Expect output of the last layer, the size should be equal to the size of the last layer
          * @return the cost after modify framework
          */
-        float backpropagation(std::vector<float> correctOut);
+        float backpropagation(const std::vector<float>& correctOut);
 
         /**
          * Calculate the cost of the current framework, with current data.

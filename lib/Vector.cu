@@ -4,8 +4,8 @@
 #include "CudaFunctions.cuh"
 
 namespace NN {
-    void Vector::initRandom() {
-        GetRand(*this);
+    void Vector::initRandom(float max, float min) {
+        GetRand(*this,max,min);
     }
 
     void Vector::resize(int s) {

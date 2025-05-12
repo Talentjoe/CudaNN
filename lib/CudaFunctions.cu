@@ -55,5 +55,14 @@ namespace NN {
         }
     }
 
+    __global__ void update_weights_kernel(Matrix w, Vector b,Vector delta, Vector layer, float studyRate) {
+        int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < w.width) {
+            for (int i = 0; i < w.width; ++i) {
+                w.d_elements[idx * w.width + i] -= studyRate * delta.d_elements[idx] * layer.d_elements[i];
+            }
+            b.d_elements[idx] -= studyRate * delta.d_elements[idx];
+        }
+    }
 
 }
