@@ -141,11 +141,12 @@ namespace NN {
             }
             push_forward_kernel<<<gridSize,blockSize,0,stream>>>(layers[i], layersZ[i + 1], b[i + 1], w[i]);
 
-            if (ActivationFunction[i] == SIGMOID_NAME) {
+            if (ActivationFunction[i+1] == SIGMOID_NAME) {
                 activate_kernel<<<gridSize,blockSize,0,stream>>>(layersZ[i + 1], layers[i + 1], sigmoid());
-            } else if (ActivationFunction[i] == RULE_NAME) {
+            } else if (ActivationFunction[i+1] == RULE_NAME) {
                 activate_kernel<<<gridSize,blockSize,0,stream>>>(layersZ[i + 1], layers[i + 1], ReLU());
-            }
+            } else
+                throw std::runtime_error("Activation function not supported");
 
             layers[i + 1].cpDtoHAsync();
             layersZ[i + 1].cpDtoHAsync();
@@ -177,7 +178,8 @@ namespace NN {
             get_last_layer_delta_kernel<<<gridSize,blockSize,0,stream>>>(layers[size - 1], layersZ[size - 1], correctOutD,delta[size-1],sigmoidP());
         } else if (ActivationFunction[size - 1] == RULE_NAME) {
             get_last_layer_delta_kernel<<<gridSize,blockSize,0,stream>>>(layers[size - 1], layersZ[size - 1], correctOutD,delta[size-1],ReLUP());
-        }
+        } else
+            throw std::runtime_error("Activation function not supported");
 
         for (int i = size - 2; i > 0; i--) {
             blockSize = layerSize[i];
@@ -192,7 +194,8 @@ namespace NN {
             } else if (ActivationFunction[i] == RULE_NAME) {
                 back_propagate_delta_kernel<<<gridSize,blockSize,0,stream>>>(
                     delta[i], delta[i + 1],w[i], layersZ[i], ReLUP());
-            }
+            } else
+                throw std::runtime_error("Activation function not supported");
         }
 
         for (int i = 0; i < size -1;i++) {

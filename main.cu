@@ -53,9 +53,9 @@ void testTrain() {
     float Srate = 0.1;
 
     vector<NN::NNCore::LayerStructure> layerStructure = {
-        {784, "ReLU"},
+        {784, ""},
         {300, "ReLU"},
-        {100, "sigmoid"},
+        {100, "ReLU"},
         {10, "sigmoid"}
     };
 
@@ -83,7 +83,7 @@ void testTrain() {
 }
 
 int main() {
-    testTrain();
+    testForward();
 
     // float Srate = 0.05;
     // NN::NNCore *nn = new NN::NNCore("./test.mod", 1);
