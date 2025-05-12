@@ -1,4 +1,6 @@
 #include "Vector.cuh"
+
+#include <iostream>
 #include "CudaFunctions.cuh"
 
 namespace NN {
@@ -23,5 +25,12 @@ namespace NN {
     void Vector::free() const {
         delete[] elements;
         cudaFree(d_elements);
+    }
+
+    void Vector::printVec() const {
+        for (int i = 0; i < size; i++) {
+            std::cout << elements[i] << " ";
+        }
+        std::cout << std::endl;
     }
 }

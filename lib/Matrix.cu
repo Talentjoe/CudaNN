@@ -1,4 +1,6 @@
 #include "Matrix.cuh"
+
+#include <iostream>
 #include "CudaFunctions.cuh"
 
 namespace NN {
@@ -24,5 +26,14 @@ namespace NN {
     void Matrix::free() const {
         delete[] elements;
         cudaFree(d_elements);
+    }
+
+    void Matrix::printMat() const {
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                std::cout << elements[i * width + j] << " ";
+            }
+            std::cout << std::endl;
+        }
     }
 }

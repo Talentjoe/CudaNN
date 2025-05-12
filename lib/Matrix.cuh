@@ -21,6 +21,8 @@ namespace NN {
         void cpHoD() const;
 
         void free() const;
+
+        void printMat() const;
     };
 }
 

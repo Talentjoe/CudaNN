@@ -4,6 +4,7 @@
 
 #ifndef VECTOR_CUH
 #define VECTOR_CUH
+#include <string>
 
 namespace NN {
     struct Vector {
@@ -20,6 +21,8 @@ namespace NN {
         void cpHoD() const;
 
         void free() const;
+
+        void printVec() const;
     };
 }
 

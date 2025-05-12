@@ -16,9 +16,16 @@ int main() {
     inNums.initRandom();
     inNums.cpDtoH();
 
-    for (int i = 0 ;i < 100; i++) {
-        cout << i <<": "<< inNums.elements[i] << endl;
-    }
+    inNums.printVec();
+
+    NN::Matrix inMat;
+    
+    inMat.resize(10, 10);
+
+    inMat.initRand();
+    inMat.cpDtoH();
+
+    inMat.printMat();
 
     return 0;
 }
