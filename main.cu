@@ -5,6 +5,19 @@
 
 using namespace std;
 
+void printPic(vector<float> pic) {
+    for (int i = 0; i < 28; i++) {
+        for (int j = 0; j < 28; j++) {
+            if (pic[i * 28 + j] > 0.5) {
+                cout << "#";
+            } else {
+                cout << " ";
+            }
+        }
+        cout << endl;
+    }
+}
+
 void genMatWithRand() {
     NN::Matrix A;
 
@@ -54,8 +67,9 @@ void testTrain() {
 
     vector<NN::NNCore::LayerStructure> layerStructure = {
         {784, ""},
-        {300, "ReLU"},
-        {100, "ReLU"},
+        {512, "ReLU"},
+        {128, "ReLU"},
+        {64, "ReLU"},
         {10, "sigmoid"}
     };
 
@@ -71,19 +85,81 @@ void testTrain() {
     testInData = readData::readData::readImageData("../Data/t10k-images.idx3-ubyte");
     testOutData = readData::readData::readTagData("../Data/t10k-labels.idx1-ubyte");
 
+
+    auto start = std::chrono::high_resolution_clock::now();
+
     for (int j = 0; j < termsOfTrain; j++) {
-        nn->train(inData, outData, true);
-        nn->test(testInData, testOutData);
-        //Srate *= 0.05;
-        //nn->changeStudyRate(Srate);
+        std::cout << "Epoch: " << j << std::endl;
+        vector<vector<float>> wrongData;
+        vector<int> correctData;
+        nn->train_with_retrain(inData, outData,wrongData, correctData,true);
+        if (j > -1) {
+            cout<<"Change Study Rate to 0.01 to train "<< wrongData.size()<<" of wrong pic" << endl;
+            nn->changeStudyRate(0.01);
+            vector<vector<float>> wrongData1;
+            vector<int> correctData1;
+            nn->train_with_retrain(wrongData, correctData,wrongData1, correctData1,true);
+
+        }
+        float crate = nn->test(testInData, testOutData);
+        nn->save("Model_Epoch" + std::to_string(j) +"_With_Rate_" +std::to_string(crate*100)+ "%.module");
+        Srate = Srate * 0.75;
+        nn->changeStudyRate(Srate);
     }
 
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+
+    std::cout << "Runtime: " << duration.count() << " Seconds" << std::endl;
+    //nn->save("test.modle");
+
+    delete nn;
+}
+
+void test() {
+    vector<vector<float> > testInData;
+    vector<int> testOutData;
+    testInData = readData::readData::readImageData("../Data/t10k-images.idx3-ubyte");
+    testOutData = readData::readData::readTagData("../Data/t10k-labels.idx1-ubyte");
+
+    NN::NNCore *nn = new NN::NNCore("./Model_Epoch8_With_Rate_98.089996%.mod", 0.01);
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    vector<vector<float>> wrongData;
+    vector<int> correctData;
+    nn->test_with_wrong(testInData, testOutData,wrongData, correctData);
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+
+    std::cout << "Runtime: " << duration.count() << " Seconds" << std::endl;
+
+    cout<< "The number of wrong data is: " << wrongData.size() << endl;
+    while (true) {
+        int index;
+        cout << "Please input the index of the pic you want to see: ";
+        cin >> index;
+        if (index < 0 || index >= wrongData.size()) {
+            cout << "Index out of range!" << endl;
+            break;
+        }
+        printPic(wrongData[index]);
+        cout << "The correct answer is: " << correctData[index] << endl;
+        nn->forward(wrongData[index]);
+        cout << "The NN's answer is: " << nn->choice() << endl;
+    }
 
     delete nn;
 }
 
 int main() {
-    testForward();
+    test();
+    //testTrain();
+    //testForward();
+
 
     // float Srate = 0.05;
     // NN::NNCore *nn = new NN::NNCore("./test.mod", 1);
@@ -95,8 +171,6 @@ int main() {
     // // };
     // //     auto *nn = new NN::NNCore(layerStructure, Srate);
     //
-    // auto testInData = readData::readData::readImageData("../Data/t10k-images.idx3-ubyte");
-    // auto testOutData = readData::readData::readTagData("../Data/t10k-labels.idx1-ubyte");
     //
     // nn->forward(testInData[0]);
     // //nn->layers[2].printVec();

@@ -97,7 +97,8 @@ namespace NN {
          * @param getAcc a bool which indicate whether to get the accuracy of the training
          * @return if getAcc is true, return the accuracy of the training, otherwise return -1
          */
-        float train(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut, bool getAcc = false);
+        float train(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut, bool getAcc);
+        float train_with_retrain(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut, std::vector<std::vector<float>> &wrongAns,std::vector<int> &correctAns, bool getAcc = false);
 
         /**
          * Test the NN with the given data
@@ -109,6 +110,7 @@ namespace NN {
          * @return the accuracy of the test
          */
         float test(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut);
+        float test_with_wrong(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut, std::vector<std::vector<float>> &wrongAns,std::vector<int> &correctAns);
 
         /**
          * Forward propagation
@@ -138,17 +140,6 @@ namespace NN {
          * @param rate the new study rate
          */
         void changeStudyRate(float rate);
-
-        /**
-         * Change the dropout rate of the NN
-         * @param rate the new dropout rate
-         */
-        void changeDropOutRate(float rate);
-
-        /**
-         * process the dropout, modify the current NN function
-         */
-        void dropSome();
 
         /**
          * Get the choice of the NN, which is the index of the output layer with the largest value
@@ -187,7 +178,7 @@ namespace NN {
          * @param nn the framework to save
          * @param path the path to save
          */
-        static void save(const NNCore &nn, std::string path);
+        void save(std::string path);
     };
 }
 
