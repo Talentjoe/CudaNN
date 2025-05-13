@@ -329,6 +329,7 @@ namespace NN {
     }
 
     void NNCore::changeStudyRate(const float rate) {
+        studyRate = rate;
     }
 
     void NNCore::changeDropOutRate(const float rate) {
