@@ -4,7 +4,6 @@
 
 #include <vector>
 #include <string>
-#include <math_functions.h>
 #include "Matrix.cuh"
 #include "Vector.cuh"
 
@@ -37,31 +36,6 @@ namespace NN {
         struct LayerStructure {
             int layerSize;
             std::string activationFunction;
-        };
-
-        struct sigmoid {
-            __device__ float operator()(float x) const {
-                return 1 / (1 + expf(-x));
-            }
-        };
-
-        struct sigmoidP {
-            __device__ float operator()(float x) const {
-                float t = 1 / (1 + expf(-x));
-                return t * (1 - t);
-            }
-        };
-
-        struct ReLU {
-            __device__ float operator()(float x) const {
-                return max(x, 0.0f);
-            }
-        };
-
-        struct ReLUP {
-            __device__ float operator()(float x) const {
-                return x > 0 ? 1 : 0.01;
-            }
         };
 
         float heLimit(int fan_in) {

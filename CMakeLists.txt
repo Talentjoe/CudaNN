@@ -11,7 +11,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-add_executable(cudaNN main.cu ./lib/readData.h ./lib/readData.cpp
+add_executable(cudaNN main.cpp ./lib/readData.h ./lib/readData.cpp
         lib/NNCore.cu
         lib/NNCore.cuh
         lib/Vector.cu

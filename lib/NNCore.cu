@@ -8,7 +8,6 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
-#include <assert.h>
 
 #include "CudaFunctions.cuh"
 
@@ -19,6 +18,32 @@ namespace NN {
 
     using namespace std;
 
+
+
+    struct sigmoid {
+        __device__ float operator()(float x) const {
+            return 1 / (1 + expf(-x));
+        }
+    };
+
+    struct sigmoidP {
+        __device__ float operator()(float x) const {
+            float t = 1 / (1 + expf(-x));
+            return t * (1 - t);
+        }
+    };
+
+    struct ReLU {
+        __device__ float operator()(float x) const {
+            return max(x, 0.0f);
+        }
+    };
+
+    struct ReLUP {
+        __device__ float operator()(float x) const {
+            return x > 0 ? 1 : 0.01;
+        }
+    };
 
     NNCore::NNCore(const std::string &path, float studyRate) {
         ifstream inFile(path);
@@ -204,8 +229,6 @@ namespace NN {
         }
 
         for (int i = 0; i < size - 1; i++) {
-            assert(layerSize[i] == w[i].width);
-            assert(layerSize[i + 1] == w[i].height);
             blockSize = layerSize[i + 1];
             gridSize = 1;
             if (layerSize[i + 1] > MAX_BLOCK_SIZE) {
