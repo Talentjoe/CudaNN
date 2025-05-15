@@ -3,7 +3,7 @@ project(cudaNN LANGUAGES CXX CUDA)
 
 set(CMAKE_CUDA_STANDARD 20)
 
-set(CMAKE_PREFIX_PATH "C:/Qt/6.9.0/msvc2022_64/lib/cmake")
+set(CMAKE_PREFIX_PATH "C:/Qt/6.9.0/msvc2022_64/")
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
@@ -11,15 +11,18 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-add_executable(cudaNN main.cpp ./lib/readData.h ./lib/readData.cpp
-        lib/NNCore.cu
-        lib/NNCore.cuh
-        lib/Vector.cu
-        lib/Matrix.cu
-        lib/CudaFunctions.cu
-        lib/Vector.cuh
-        lib/Matrix.cuh
-        lib/CudaFunctions.cuh)
+add_executable(cudaNN main.cpp
+        lib/readData.cpp
+        CudaNN/NNCore.cu
+        CudaNN/Vector.cu
+        CudaNN/Matrix.cu
+        CudaNN/CudaFunctions.cu
+        UI/mainwindow.cpp
+        UI/mainwindow.h)
+target_include_directories(cudaNN PRIVATE ${CMAKE_SOURCE_DIR}/lib)
+target_include_directories(cudaNN PRIVATE ${CMAKE_SOURCE_DIR}/CudaNN)
+
+
 
 set_target_properties(cudaNN PROPERTIES
                       CUDA_SEPARABLE_COMPILATION ON)

@@ -1,4 +1,4 @@
-#include "./lib/NNCore.cuh"
+#include "./CudaNN/NNCore.cuh"
 #include "./lib/readData.h"
 #include <chrono>
 #include <iostream>
@@ -155,34 +155,15 @@ void test() {
     delete nn;
 }
 
-int main() {
-    //test();
-    testTrain();
-    //testForward();
+#include <QApplication>
+#include "./UI/mainwindow.h"
 
-
-    // float Srate = 0.05;
-    // NN::NNCore *nn = new NN::NNCore("./test.mod", 1);
-    //
-    // // vector<NN::NNCore::LayerStructure> layerStructure = {
-    // //     {784, "sigmoid"},
-    // //     {100, "sigmoid"},
-    // //     {10, "sigmoid"}
-    // // };
-    // //     auto *nn = new NN::NNCore(layerStructure, Srate);
-    //
-    //
-    // nn->forward(testInData[0]);
-    // //nn->layers[2].printVec();
-    //
-    // nn->backpropagation({0,0,0,0,0,0,0,1,0,0});
-    // nn->forward(testInData[0]);
-    // nn->w[1].cpDtoH();
-    // nn->w[1].printMat();
-    // nn->layersZ[1].cpDtoH();
-    // nn->layersZ[1].printVec();
-    // nn->delta[1].cpDtoH();
-    // nn->delta[1].printVec();
-
-    return 0;
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.resize(800, 600);
+    w.setWindowTitle("Qt Handwriting Board");
+    w.show();
+    return a.exec();
 }
