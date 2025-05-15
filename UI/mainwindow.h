@@ -1,9 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <NNCore.cuh>
 #include <QMainWindow>
 #include <QImage>
-#include <QPixmap>
 #include <QPoint>
 #include <QLabel>
 
@@ -26,8 +26,14 @@ private:
     QPoint lastPoint;       // 上一个鼠标位置
     bool drawing;           // 绘图状态
     QLabel *pixelInfoLabel; // 像素信息显示标签
+    QLabel *guessInfoLabel; // 像素信息显示标签
+
+    NN::NNCore *nn; // 神经网络对象
 
     void setupUI();
+    void openModule();
+    void guessModule();
+    std::vector<float> getVector();
 };
 
 #endif // MAINWINDOW_H
