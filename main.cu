@@ -156,8 +156,8 @@ void test() {
 }
 
 int main() {
-    test();
-    //testTrain();
+    //test();
+    testTrain();
     //testForward();
 
 
