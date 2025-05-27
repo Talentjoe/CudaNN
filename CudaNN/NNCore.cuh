@@ -31,7 +31,6 @@ namespace NN {
         Matrix *w; // weight
         Vector *delta; // delta of each layer
 
-
     public:
         struct LayerStructure {
             int layerSize;
@@ -72,7 +71,10 @@ namespace NN {
          * @return if getAcc is true, return the accuracy of the training, otherwise return -1
          */
         float train(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut, bool getAcc);
-        float train_with_retrain(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut, std::vector<std::vector<float>> &wrongAns,std::vector<int> &correctAns, bool getAcc = false);
+
+        float train_with_retrain(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut,
+                                 std::vector<std::vector<float> > &wrongAns, std::vector<int> &correctAns,
+                                 bool getAcc = false);
 
         /**
          * Test the NN with the given data
@@ -84,7 +86,9 @@ namespace NN {
          * @return the accuracy of the test
          */
         float test(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut);
-        float test_with_wrong(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut, std::vector<std::vector<float>> &wrongAns,std::vector<int> &correctAns);
+
+        float test_with_wrong(const std::vector<std::vector<float> > &inNums, const std::vector<int> &correctOut,
+                              std::vector<std::vector<float> > &wrongAns, std::vector<int> &correctAns);
 
         /**
          * Forward propagation
@@ -153,6 +157,7 @@ namespace NN {
          * @param path the path to save
          */
         void save(std::string path);
+
     };
 }
 
