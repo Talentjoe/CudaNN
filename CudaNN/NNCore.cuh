@@ -102,9 +102,16 @@ namespace NN {
          * Back propagation, modify the current NN function. Should first do forward propagation which
          * gives the output of current framework and modify based on that
          * @param correctOut Expect output of the last layer, the size should be equal to the size of the last layer
-         * @return the cost after modify framework
          */
-        float backpropagation(const std::vector<float>& correctOut);
+        Vector * backpropagation(const std::vector<float>& correctOut);
+
+        /**
+         * Back propagation, modify the current NN function. Should first do forward propagation which
+         * gives the output of current framework and modify based on that
+         */
+        Vector * backpropagation_with_delta();
+
+        void set_lastLayer_delta(Vector *deltaPreLayer);
 
         /**
          * Calculate the cost of the current framework, with current data.

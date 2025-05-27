@@ -62,7 +62,7 @@ void testForward() {
 }
 
 void testTrain() {
-    const int termsOfTrain = 10;
+    const int termsOfTrain = 1;
     float Srate = 0.1;
 
     vector<NN::NNCore::LayerStructure> layerStructure = {
@@ -77,8 +77,8 @@ void testTrain() {
 
     vector<vector<float> > inData;
     vector<int> outData;
-    inData = readData::readData::readImageData("../Data/train-images.idx3-ubyte");
-    outData = readData::readData::readTagData("../Data/train-labels.idx1-ubyte");
+    inData = readData::readData::readImageData("../Data/train-images.idx3-ubyte",10000);
+    outData = readData::readData::readTagData("../Data/train-labels.idx1-ubyte",10000);
 
     vector<vector<float> > testInData;
     vector<int> testOutData;
@@ -93,14 +93,14 @@ void testTrain() {
         vector<vector<float>> wrongData;
         vector<int> correctData;
         nn->train_with_retrain(inData, outData,wrongData, correctData,true);
-        if (j > -1) {
-            cout<<"Change Study Rate to 0.01 to train "<< wrongData.size()<<" of wrong pic" << endl;
-            nn->changeStudyRate(0.01);
-            vector<vector<float>> wrongData1;
-            vector<int> correctData1;
-            nn->train_with_retrain(wrongData, correctData,wrongData1, correctData1,true);
-
-        }
+        // if (j > -1) {
+        //     cout<<"Change Study Rate to 0.01 to train "<< wrongData.size()<<" of wrong pic" << endl;
+        //     nn->changeStudyRate(0.01);
+        //     vector<vector<float>> wrongData1;
+        //     vector<int> correctData1;
+        //     nn->train_with_retrain(wrongData, correctData,wrongData1, correctData1,true);
+        //
+        // }
         float crate = nn->test(testInData, testOutData);
         nn->save("Model_Epoch" + std::to_string(j) +"_With_Rate_" +std::to_string(crate*100)+ "%.module");
         Srate = Srate * 0.75;
@@ -158,12 +158,16 @@ void test() {
 #include <QApplication>
 #include "./UI/mainwindow.h"
 
+
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.resize(300, 400);
-    w.setWindowTitle("Qt Handwriting Board");
-    w.show();
-    return a.exec();
+    testTrain();
+
+    return 0;
+    // QApplication a(argc, argv);
+    // MainWindow w;
+    // w.resize(300, 400);
+    // w.setWindowTitle("Qt Handwriting Board");
+    // w.show();
+    // return a.exec();
 }

@@ -187,7 +187,7 @@ namespace NN {
         return vector(layers[size - 1].elements, layers[size - 1].elements + layerSize[size - 1]);
     }
 
-    float NNCore::backpropagation(const vector<float> &correctOut) {
+    Vector * NNCore::backpropagation(const vector<float> &correctOut) {
         cudaStream_t stream;
         cudaStreamCreate(&stream);
 
@@ -210,6 +210,18 @@ namespace NN {
                 layers[size - 1], layersZ[size - 1], correctOutD, delta[size - 1], ReLUP());
         } else
             throw std::runtime_error("Activation function not supported");
+
+        cudaFree(correctOutD);
+        cudaStreamSynchronize(stream);
+        cudaStreamDestroy(stream);
+
+        return backpropagation_with_delta();
+    }
+
+    Vector *NNCore::backpropagation_with_delta() {
+        cudaStream_t stream;
+        cudaStreamCreate(&stream);
+        int blockSize, gridSize;
 
         for (int i = size - 2; i > 0; i--) {
             blockSize = layerSize[i];
@@ -240,10 +252,10 @@ namespace NN {
 
         cudaStreamSynchronize(stream);
         cudaStreamDestroy(stream);
-        cudaFree(correctOutD);
 
-        return 0;
+        return &delta[0];
     }
+
 
     float NNCore::train_with_retrain(const vector<vector<float> > &inNums, const vector<int> &correctOut, std::vector<std::vector<float>> &wrongAns,std::vector<int> &correctAns, bool getAcc) {
         if (inNums.size() != correctOut.size()) {
