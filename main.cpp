@@ -77,8 +77,8 @@ void testTrain() {
 
     vector<vector<float> > inData;
     vector<int> outData;
-    inData = readData::readData::readImageData("../Data/train-images.idx3-ubyte",10000);
-    outData = readData::readData::readTagData("../Data/train-labels.idx1-ubyte",10000);
+    inData = readData::readData::readImageData("../Data/train-images.idx3-ubyte");
+    outData = readData::readData::readTagData("../Data/train-labels.idx1-ubyte");
 
     vector<vector<float> > testInData;
     vector<int> testOutData;
@@ -101,6 +101,65 @@ void testTrain() {
         //     nn->train_with_retrain(wrongData, correctData,wrongData1, correctData1,true);
         //
         // }
+        float crate = nn->test(testInData, testOutData);
+        nn->save("Model_Epoch" + std::to_string(j) +"_With_Rate_" +std::to_string(crate*100)+ "%.module");
+        Srate = Srate * 0.75;
+        nn->changeStudyRate(Srate);
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+
+    std::cout << "Runtime: " << duration.count() << " Seconds" << std::endl;
+    //nn->save("test.modle");
+
+    delete nn;
+}
+
+
+void testTrainLetter() {
+    const int termsOfTrain = 10;
+    float Srate = 0.01;
+
+
+    vector<vector<float> > inData;
+    vector<int> outData;
+    inData = readData::readData::readImageData("../Data/emnist-letters-train-images.idx3-ubyte");
+    outData = readData::readData::readTagData("../Data/emnist-letters-train-labels.idx1-ubyte");
+
+    vector<vector<float> > testInData;
+    vector<int> testOutData;
+    testInData = readData::readData::readImageData("../Data/emnist-letters-test-images.idx3-ubyte");
+    testOutData = readData::readData::readTagData("../Data/emnist-letters-test-labels.idx1-ubyte");
+
+
+    vector<NN::NNCore::LayerStructure> layerStructure = {
+        {784, ""},
+        {512, "ReLU"},
+        {128, "ReLU"},
+        {64, "ReLU"},
+        {27, "sigmoid"}
+    };
+
+    auto *nn = new NN::NNCore(layerStructure, Srate);
+
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for (int j = 0; j < termsOfTrain; j++) {
+        std::cout << "Epoch: " << j << std::endl;
+        vector<vector<float>> wrongData;
+        vector<int> correctData;
+        nn->train_with_retrain(inData, outData,wrongData, correctData,true);
+        if (j > -1) {
+            cout<<"Change Study Rate to 0.01 to train "<< wrongData.size()<<" of wrong pic" << endl;
+            nn->changeStudyRate(0.005);
+            vector<vector<float>> wrongData1;
+            vector<int> correctData1;
+            nn->train_with_retrain(wrongData, correctData,wrongData1, correctData1,true);
+
+        }
         float crate = nn->test(testInData, testOutData);
         nn->save("Model_Epoch" + std::to_string(j) +"_With_Rate_" +std::to_string(crate*100)+ "%.module");
         Srate = Srate * 0.75;
@@ -161,13 +220,13 @@ void test() {
 
 int main(int argc, char *argv[])
 {
-    testTrain();
+  //  testTrainLetter();
 
-    return 0;
-    // QApplication a(argc, argv);
-    // MainWindow w;
-    // w.resize(300, 400);
-    // w.setWindowTitle("Qt Handwriting Board");
-    // w.show();
-    // return a.exec();
+    // return 0;
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.resize(300, 400);
+    w.setWindowTitle("Qt Handwriting Board");
+    w.show();
+    return a.exec();
 }

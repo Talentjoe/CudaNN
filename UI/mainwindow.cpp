@@ -71,7 +71,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event)
             return;
         }
         QPainter painter(&canvas);
-        painter.setPen(QPen(Qt::black, 20, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.setPen(QPen(Qt::black, 10, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         
         // 绘制线条
         painter.drawLine(lastPoint, event->pos());

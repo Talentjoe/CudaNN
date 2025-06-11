@@ -265,7 +265,7 @@ namespace NN {
 
         int corrctCnt = 0;
         int wrongCnt = 0;
-        vector answer(10, 0.0f);
+        vector answer(layerSize[size-1], 0.0f);
 
         for (int i = 0; i < inNums.size(); i++) {
             if (inNums[i].size() != layerSize[0] || correctOut[i] > layerSize[size - 1]) {
@@ -275,9 +275,6 @@ namespace NN {
 
             forward(inNums[i]);
             answer[correctOut[i]] = 1;
-            backpropagation(answer);
-            answer[correctOut[i]] = 0;
-
             if (getAcc) {
                 if (choice() == correctOut[i]) {
                     corrctCnt++;
@@ -287,6 +284,9 @@ namespace NN {
                     wrongCnt++;
                 }
             }
+            backpropagation(answer);
+            answer[correctOut[i]] = 0;
+
 
             if (i % 1000 == 0) {
                 cout << "\rProgress: " << setw(7)<< i / (float) inNums.size() * 100 << "%";
